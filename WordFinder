@@ -1,0 +1,143 @@
+
+/// <summary>
+/// Following class 10 most repeated words in sorted order from given matrix.
+/// This class when benchmarked, got following results
+/// | Method  | Mean     | Error     | StdDev    |
+/// |-------- |---------:|----------:|----------:|
+/// | Find    | 4.627 us | 0.1299 us | 0.3830 us |
+/// </summary>
+public class WordFinder
+{
+    private readonly char[,] _matrix;
+    private readonly int _rows;
+    private readonly int _cols;
+
+    /// <summary>
+    /// Initializes a new instance of the WordFinder class with the given matrix.
+    /// </summary>
+    /// <param name="matrix">The matrix represented as a collection of strings.</param>
+    public WordFinder(IEnumerable<string> matrix)
+    {
+        var matrixList = matrix.ToList();
+        _rows = matrixList.Count;
+        _cols = matrixList[0].Length;
+        _matrix = new char[_rows, _cols];
+
+        for (int i = 0; i < _rows; i++)
+        {
+            for (int j = 0; j < _cols; j++)
+            {
+                _matrix[i, j] = matrixList[i][j];
+            }
+        }
+    }
+
+    /// <summary>
+    /// Finds the 10 most repeated words in the matrix in sorted order.
+    /// </summary>
+    /// <param name="wordstream">The wordstream represented as a collection of strings.</param>
+    /// <returns>The 10 most repeated words in sorted order.</returns>
+    public IEnumerable<string> Find(IEnumerable<string> wordstream)
+    {
+        var wordSet = new HashSet<string>(wordstream);
+        var foundWords = new Dictionary<string, int>();
+
+        foreach (var word in wordSet)
+        {
+            if (SearchWord(word))
+            {
+                if (foundWords.ContainsKey(word))
+                {
+                    foundWords[word]++;
+                }
+                else
+                {
+                    foundWords[word] = 1;
+                }
+            }
+        }
+
+        return foundWords.OrderByDescending(kv => kv.Value)
+                         .ThenBy(kv => kv.Key)
+                         .Take(10)
+                         .Select(kv => kv.Key);
+    }
+
+    /// <summary>
+    /// Searches for the given word in the matrix starting from each position.
+    /// </summary>
+    /// <param name="word">The word to search for.</param>
+    /// <returns>True if the word is found, false otherwise.</returns>
+    private bool SearchWord(string word)
+    {
+        for (int i = 0; i < _rows; i++)
+        {
+            for (int j = 0; j < _cols; j++)
+            {
+                if (SearchFromPosition(word, i, j))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Searches for the given word starting from the specified position in the matrix.
+    /// </summary>
+    /// <param name="word">The word to search for.</param>
+    /// <param name="row">The starting row position.</param>
+    /// <param name="col">The starting column position.</param>
+    /// <returns>True if the word is found, false otherwise.</returns>
+    private bool SearchFromPosition(string word, int row, int col)
+    {
+        if (SearchHorizontally(word, row, col) || SearchVertically(word, row, col))
+        {
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Searches for the given word horizontally starting from the specified position in the matrix.
+    /// </summary>
+    /// <param name="word">The word to search for.</param>
+    /// <param name="row">The starting row position.</param>
+    /// <param name="col">The starting column position.</param>
+    /// <returns>True if the word is found, false otherwise.</returns>
+    private bool SearchHorizontally(string word, int row, int col)
+    {
+        if (col + word.Length > _cols) return false;
+
+        for (int i = 0; i < word.Length; i++)
+        {
+            if (_matrix[row, col + i] != word[i])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// Searches for the given word vertically starting from the specified position in the matrix.
+    /// </summary>
+    /// <param name="word">The word to search for.</param>
+    /// <param name="row">The starting row position.</param>
+    /// <param name="col">The starting column position.</param>
+    /// <returns>True if the word is found, false otherwise.</returns>
+    private bool SearchVertically(string word, int row, int col)
+    {
+        if (row + word.Length > _rows) return false;
+
+        for (int i = 0; i < word.Length; i++)
+        {
+            if (_matrix[row + i, col] != word[i])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+}
